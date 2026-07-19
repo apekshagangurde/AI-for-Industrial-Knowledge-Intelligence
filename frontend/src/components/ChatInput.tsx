@@ -28,12 +28,12 @@ export function ChatInput({ onSend, disabled }: Props) {
         onChange={(event) => setValue(event.target.value)}
         placeholder="Ask about equipment, procedures, incidents…"
         disabled={disabled}
-        className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+        className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 outline-none focus:border-blue-500 disabled:opacity-50 sm:text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
       />
       <button
         type="submit"
         disabled={disabled || !value.trim()}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="min-h-11 min-w-11 shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
       >
         Send
       </button>

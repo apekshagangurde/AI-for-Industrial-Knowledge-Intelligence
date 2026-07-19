@@ -106,7 +106,9 @@ pnpm run dev
 | `pip install -r requirements.txt` fails with a `SyntaxError` in `olefile2.py` (or a `sys.stdout.encoding` `TypeError` right after) | You're on the Xcode Command Line Tools' Python 3.9, not a real Python 3.10+. Rebuild the venv with an explicit modern interpreter (see Prerequisites). |
 | `pip install -r requirements.txt` fails on some other package | Some ingestion libs (e.g. `unstructured`) pull in native deps; check the error for a missing system library and install it (e.g. `brew install libmagic` on macOS). |
 | `Address already in use` on port 8000 when starting `uvicorn` | Something else on your machine is already bound to 8000 — often another local project, or one of its Docker containers, left running. `lsof -i :8000 -sTCP:LISTEN` shows what. Rather than kill an unrelated process, just change `API_PORT`/`VITE_API_BASE_URL` in your own `.env` to a free port (e.g. 8001) — `.env` is gitignored, so this is a per-machine setting and won't affect other developers, who may well have 8000 free. |
-| Frontend shows a red "Couldn't reach the knowledge base" bubble | The backend isn't running, is on the wrong port, or CORS is rejecting the origin — confirm `VITE_API_BASE_URL` in `.env` matches the port `uvicorn` printed. |
+| Frontend shows a red "Couldn't reach the knowledge base" bubble | The backend isn't running, is on the wrong port, or CORS is rejecting the origin — confirm `VITE_API_BASE_URL` in `.env` matches the port `uvicorn` printed. Also check the next row — a Groq quota error surfaces as a 500 here too. |
+| `/query` suddenly returns a raw 500 / crash | Groq's free tier caps at 100,000 tokens **per day**, shared across every LLM call the whole app makes (chat, entity extraction, etc.) — it's easy to exhaust during heavy testing. It's a rolling window, not a fixed daily reset, so it recovers gradually; the error message includes a "try again in Nm" estimate. To avoid waiting, either use a fresh `GROQ_API_KEY`, or blank it out in `.env` to fall back to a local Ollama model (`OLLAMA_MODEL` in `.env`, needs `ollama pull` first). Note this is exactly the gap #20 is meant to close — right now a quota error reaches the client as an unhandled 500, not a clean message. |
+| I changed `GROQ_API_KEY` (or anything else) in `.env` but nothing changed | `uvicorn --reload` only watches `.py` files, not `.env` — restart the backend process manually after any `.env` edit. |
 | `/query` answers are always "nothing relevant was found" | `ingestion.embed_store` hasn't been run yet (or `CHROMA_PATH` points somewhere empty) — run `python -m ingestion.embed_store` from `backend/` with the venv active. |
 | `embed_store.py` skips a doc with `tesseract is not installed` | Install the Tesseract binary (see Prerequisites) and make sure it's on `PATH`, then re-run ingestion — that one doc is skipped, not fatal, on the first pass. |
 
@@ -138,11 +140,20 @@ everything below is the final feature — check an issue's status before assumin
 - ✅ KG schema + Neo4j constraints (#5) — `docs/kg-schema.md` defines the node/relationship
   shape; `scripts/kg_constraints.cypher` applied to the running Neo4j container (7 uniqueness
   constraints, verified idempotent)
-- 🟡 Not yet done: **KG-aware retrieval (#16)** — retrieval is still vector-only, nothing writes
-  to Neo4j yet (that's #12 entity extraction + #13 graph writer, both unblocked but not started).
-  #19 (the "official" endpoint issue, which requires #16 + #18 together) stays open until #16
-  lands, even though `/query` is functionally live. **#20** (structured error handling + pytest
-  coverage for `/query`) is also still open — only basic empty-question validation exists so far.
+- ✅ Mobile responsive pass (#25) — larger touch targets (44px min) on the input/send
+  button/citation cards, `break-words` + `min-w-0` to prevent horizontal overflow, `text-base`
+  on the input to stop iOS Safari's auto-zoom-on-focus. Not visually verified in a real browser
+  in this environment (no screenshot tool available) — worth a manual check at 375px.
+- 🟡 In progress, blocked on LLM quota: **entity extraction (#12) + graph writer (#13)** —
+  `backend/ingestion/entity_extract.py` and `backend/ingestion/graph_writer.py` exist and work
+  (verified >80% equipment-tag recognition, MERGE-based idempotent writes), but the full-corpus
+  run hit Groq's free-tier **daily** token cap partway through (3 of 24 documents written) and
+  had to be aborted. Needs a fresh quota window (or Ollama) to finish. See Troubleshooting.
+- 🟡 Not yet done: **KG-aware retrieval (#16)** — blocked on #13 actually finishing. #19 (the
+  "official" endpoint issue, which requires #16 + #18 together) stays open until #16 lands, even
+  though `/query` is functionally live. **#20** (structured error handling + pytest coverage for
+  `/query`) is also still open — only basic empty-question validation exists so far; today's
+  Groq 429 came back as a raw 500, not a clean error, which is exactly what #20 would fix.
 
 ## Architecture & Planning Notes
 

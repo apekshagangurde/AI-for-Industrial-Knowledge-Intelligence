@@ -14,7 +14,7 @@ export function CitationCard({ citation }: { citation: Citation }) {
     <button
       type="button"
       onClick={() => setExpanded((prev) => !prev)}
-      className="w-full max-w-xs rounded-lg border border-slate-200 bg-white p-2 text-left text-xs shadow-sm transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
+      className="min-h-11 w-full max-w-xs rounded-lg border border-slate-200 bg-white p-3 text-left text-xs shadow-sm transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="truncate font-medium text-slate-700 dark:text-slate-200">
@@ -27,7 +27,7 @@ export function CitationCard({ citation }: { citation: Citation }) {
         </span>
       </div>
       <div className="mt-0.5 text-slate-400 dark:text-slate-500">page {citation.page}</div>
-      <p className={`mt-1 text-slate-500 dark:text-slate-400 ${expanded ? '' : 'line-clamp-2'}`}>
+      <p className={`mt-1 break-words text-slate-500 dark:text-slate-400 ${expanded ? '' : 'line-clamp-2'}`}>
         {citation.snippet}
       </p>
     </button>
