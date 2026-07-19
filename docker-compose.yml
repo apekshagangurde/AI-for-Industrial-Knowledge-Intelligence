@@ -1,0 +1,23 @@
+services:
+  neo4j:
+    image: neo4j:5-community
+    container_name: industrial-ki-neo4j
+    ports:
+      - "7474:7474" # browser UI
+      - "7687:7687" # bolt
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-changeme}
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  neo4j_data:
+
+# Chroma runs embedded (no container) — see backend/requirements.txt (chromadb) and
+# CHROMA_PATH in .env. `chromadb.PersistentClient(path=CHROMA_PATH)` writes straight
+# to a local directory, so there's no server to stand up for the hackathon scope.
