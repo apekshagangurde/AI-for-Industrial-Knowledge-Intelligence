@@ -25,6 +25,7 @@ data/processed/*
 # Vector DB / graph local state
 chroma_db/
 neo4j_data/
+backend/entity_cache.json
 
 # OS / editor
 .DS_Store
