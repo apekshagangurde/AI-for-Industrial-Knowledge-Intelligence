@@ -1,9 +1,14 @@
 """FastAPI entrypoint (#19): exposes the RAG pipeline (#15 retrieval + #17
 generation) over HTTP for the frontend chat panel (#24).
 """
+
+import logging
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 from rag.confidence import score_confidence
 from rag.generate import generate_answer
@@ -47,9 +52,23 @@ def query(request: QueryRequest):
     question = request.question.strip()
     if not question:
         raise HTTPException(status_code=422, detail="question must not be empty")
+    if len(question) > 2000:
+        raise HTTPException(
+            status_code=422, detail="question is too long (max 2000 characters)"
+        )
 
-    chunks = retrieve(question, top_k=5)
-    result = generate_answer(question, chunks)
+    try:
+        chunks = retrieve(question, top_k=5)
+        result = generate_answer(question, chunks)
+    except Exception:
+        logger.exception("query failed for question=%r", question)
+        raise HTTPException(
+            status_code=503,
+            detail="The knowledge base is temporarily unavailable (retrieval or LLM error). Please try again shortly.",
+        )
+
     confidence = score_confidence(chunks)
 
-    return QueryResponse(answer=result["answer"], citations=result["citations"], confidence=confidence)
+    return QueryResponse(
+        answer=result["answer"], citations=result["citations"], confidence=confidence
+    )

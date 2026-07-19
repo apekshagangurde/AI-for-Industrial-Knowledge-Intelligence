@@ -107,7 +107,7 @@ pnpm run dev
 | `pip install -r requirements.txt` fails on some other package | Some ingestion libs (e.g. `unstructured`) pull in native deps; check the error for a missing system library and install it (e.g. `brew install libmagic` on macOS). |
 | `Address already in use` on port 8000 when starting `uvicorn` | Something else on your machine is already bound to 8000 — often another local project, or one of its Docker containers, left running. `lsof -i :8000 -sTCP:LISTEN` shows what. Rather than kill an unrelated process, just change `API_PORT`/`VITE_API_BASE_URL` in your own `.env` to a free port (e.g. 8001) — `.env` is gitignored, so this is a per-machine setting and won't affect other developers, who may well have 8000 free. |
 | Frontend shows a red "Couldn't reach the knowledge base" bubble | The backend isn't running, is on the wrong port, or CORS is rejecting the origin — confirm `VITE_API_BASE_URL` in `.env` matches the port `uvicorn` printed. Also check the next row — a Groq quota error surfaces as a 500 here too. |
-| `/query` suddenly returns a raw 500 / crash | Groq's free tier caps at 100,000 tokens **per day**, shared across every LLM call the whole app makes (chat, entity extraction, etc.) — it's easy to exhaust during heavy testing. It's a rolling window, not a fixed daily reset, so it recovers gradually; the error message includes a "try again in Nm" estimate. To avoid waiting, either use a fresh `GROQ_API_KEY`, or blank it out in `.env` to fall back to a local Ollama model (`OLLAMA_MODEL` in `.env`, needs `ollama pull` first). Note this is exactly the gap #20 is meant to close — right now a quota error reaches the client as an unhandled 500, not a clean message. |
+| `/query` returns `{"detail": "The knowledge base is temporarily unavailable..."}` (503) | Groq's free tier caps at 100,000 tokens **per day**, shared across every LLM call the whole app makes (chat, entity extraction, etc.) — it's easy to exhaust during heavy testing. It's a rolling window, not a fixed daily reset, so it recovers gradually; check the backend terminal for the actual Groq error and a "try again in Nm" estimate (also logged there: `query failed for question='...'`, via `logger.exception` — #20). To avoid waiting, either use a fresh `GROQ_API_KEY`, or blank it out in `.env` to fall back to a local Ollama model (`OLLAMA_MODEL` in `.env`, needs `ollama pull` first). |
 | I changed `GROQ_API_KEY` (or anything else) in `.env` but nothing changed | `uvicorn --reload` only watches `.py` files, not `.env` — restart the backend process manually after any `.env` edit. |
 | `/query` answers are always "nothing relevant was found" | `ingestion.embed_store` hasn't been run yet (or `CHROMA_PATH` points somewhere empty) — run `python -m ingestion.embed_store` from `backend/` with the venv active. |
 | `embed_store.py` skips a doc with `tesseract is not installed` | Install the Tesseract binary (see Prerequisites) and make sure it's on `PATH`, then re-run ingestion — that one doc is skipped, not fatal, on the first pass. |
@@ -140,10 +140,16 @@ everything below is the final feature — check an issue's status before assumin
 - ✅ KG schema + Neo4j constraints (#5) — `docs/kg-schema.md` defines the node/relationship
   shape; `scripts/kg_constraints.cypher` applied to the running Neo4j container (7 uniqueness
   constraints, verified idempotent)
-- ✅ Mobile responsive pass (#25) — larger touch targets (44px min) on the input/send
-  button/citation cards, `break-words` + `min-w-0` to prevent horizontal overflow, `text-base`
-  on the input to stop iOS Safari's auto-zoom-on-focus. Not visually verified in a real browser
-  in this environment (no screenshot tool available) — worth a manual check at 375px.
+- ✅ API error handling + tests (#20) — `/query` validates input (empty/missing/too-long
+  question -> clean 422 JSON) and catches retrieval/LLM failures (-> clean 503 JSON, logged
+  server-side via `logger.exception`, no internals leaked to the client). 5 pytest cases in
+  `backend/tests/test_main.py` (mocked, no real LLM calls) cover all of this; verified live too.
+- 🟡 In progress: **Mobile responsive pass (#25)** — touch targets, overflow guards, and iOS
+  input auto-zoom fix are in; hit and is fixing a real regression along the way (`break-words`
+  was causing single short words to render letter-by-letter in the chat bubbles on desktop, a
+  CSS min-content sizing quirk in the flex chain — fixed by dropping `break-words` in favor of
+  `inline-block` shrink-to-fit sizing). Not yet visually confirmed — no screenshot/browser tool
+  available in this environment, pending manual check.
 - 🟡 In progress, blocked on LLM quota: **entity extraction (#12) + graph writer (#13)** —
   `backend/ingestion/entity_extract.py` and `backend/ingestion/graph_writer.py` exist and work
   (verified >80% equipment-tag recognition, MERGE-based idempotent writes), but the full-corpus
@@ -151,9 +157,7 @@ everything below is the final feature — check an issue's status before assumin
   had to be aborted. Needs a fresh quota window (or Ollama) to finish. See Troubleshooting.
 - 🟡 Not yet done: **KG-aware retrieval (#16)** — blocked on #13 actually finishing. #19 (the
   "official" endpoint issue, which requires #16 + #18 together) stays open until #16 lands, even
-  though `/query` is functionally live. **#20** (structured error handling + pytest coverage for
-  `/query`) is also still open — only basic empty-question validation exists so far; today's
-  Groq 429 came back as a raw 500, not a clean error, which is exactly what #20 would fix.
+  though `/query` is functionally live and now handles failures gracefully (#20).
 
 ## Architecture & Planning Notes
 

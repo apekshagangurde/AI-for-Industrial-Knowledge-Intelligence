@@ -15,9 +15,9 @@ export function ChatMessageList({ messages, isLoading }: Props) {
         </p>
       )}
       {messages.map((message) => (
-        <div key={message.id} className={message.role === 'user' ? 'ml-auto' : 'mr-auto'}>
+        <div key={message.id} className={`shrink-0 ${message.role === 'user' ? 'ml-auto' : 'mr-auto'}`}>
           <div
-            className={`max-w-[85%] break-words rounded-2xl px-4 py-2 text-sm sm:max-w-[75%] ${
+            className={`inline-block max-w-[85%] rounded-2xl px-4 py-2 text-sm sm:max-w-[75%] ${
               message.role === 'user'
                 ? 'bg-blue-600 text-white'
                 : message.role === 'error'
@@ -37,7 +37,7 @@ export function ChatMessageList({ messages, isLoading }: Props) {
         </div>
       ))}
       {isLoading && (
-        <div className="mr-auto max-w-[85%] rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-400 sm:max-w-[75%] dark:bg-slate-800 dark:text-slate-500">
+        <div className="mr-auto inline-block max-w-[85%] rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-400 sm:max-w-[75%] dark:bg-slate-800 dark:text-slate-500">
           Thinking…
         </div>
       )}
