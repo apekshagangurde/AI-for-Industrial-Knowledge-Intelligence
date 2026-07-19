@@ -21,6 +21,13 @@ export function ChatPanel() {
         content: response.answer,
       }
       setMessages((prev) => [...prev, assistantMessage])
+    } catch {
+      const errorMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'error',
+        content: "Couldn't reach the knowledge base. Check that the backend is running and try again.",
+      }
+      setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }

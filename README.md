@@ -29,8 +29,12 @@ confidence scores). See open [Issues](../../issues) for the full build breakdown
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (running, not just installed)
-- Python 3.10+
-- Node.js 18+ and npm
+- Python 3.10+ — on macOS, don't rely on whatever `python3` resolves to first. The Python 3.9
+  bundled with Xcode Command Line Tools is too old for some deps (`pip install` fails compiling
+  `olefile` with a `SyntaxError`). Check `python3 --version`; if it's not 3.10+, point the venv at
+  a real interpreter, e.g. `/Library/Frameworks/Python.framework/Versions/3.13/bin/python3` or a
+  Homebrew Python.
+- Node.js 18+ and pnpm (`npm install -g pnpm` if you don't have it)
 - A free [Groq API key](https://console.groq.com) (console.groq.com → API Keys → Create API Key)
   — takes about a minute, no credit card. Local [Ollama](https://ollama.com) works as an offline
   fallback if you'd rather not sign up for anything.
@@ -48,20 +52,24 @@ cd AI-for-Industrial-Knowledge-Intelligence
 # 2. Configure environment
 cp .env.example .env
 # open .env and paste your GROQ_API_KEY (or set up Ollama — see .env.example comments)
+# API_PORT defaults to 8000. If something else on your machine already owns 8000 (another
+# local project, a different Docker container, etc.), change API_PORT and VITE_API_BASE_URL
+# in .env to a free port, e.g. 8001 — see Troubleshooting.
 
 # 3. Start local infra (Neo4j knowledge graph)
 docker compose up -d
 
-# 4. Backend — Python virtual env + dependencies
+# 4. Backend — Python virtual env + dependencies (use a real Python 3.10+, see Prerequisites)
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port "${API_PORT:-8000}" --reload
 cd ..
 
-# 5. Frontend — once issue #21 has scaffolded frontend/ with Vite
+# 5. Frontend (separate terminal)
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ### Verify your setup
@@ -69,12 +77,15 @@ npm run dev
 - **Neo4j:** `docker ps --filter name=industrial-ki-neo4j` should show `Up ... (healthy)`.
   Open [http://localhost:7474](http://localhost:7474) and log in with the `NEO4J_USER` /
   `NEO4J_PASSWORD` from your `.env` (defaults: `neo4j` / `changeme`).
-- **Groq/LLM:** once issue #6 lands, run `python backend/scripts/llm_smoke_test.py "hello"` —
-  it should print a real model response.
-- **Backend API:** once issue #19 lands, `curl http://localhost:8000/query -X POST -d '{"question":"..."}'`
-  should return JSON with `answer`, `citations`, and `confidence`.
-- **Frontend:** once issue #21 lands, `npm run dev` in `frontend/` should serve the app at
-  [http://localhost:5173](http://localhost:5173).
+- **Groq/LLM:** `python backend/scripts/llm_smoke_test.py "hello"` should print a real model
+  response.
+- **Backend API:** with `uvicorn` running, `curl http://localhost:8000/query -X POST -d
+  '{"question":"hello"}'` (swap the port if you changed `API_PORT`) should return JSON with
+  `answer`, `citations`, and `confidence`.
+- **Frontend:** `pnpm run dev` in `frontend/` serves the app on the first free port starting at
+  [http://localhost:5173](http://localhost:5173) (Vite bumps the port if 5173+ are already in
+  use — check the terminal output for the actual URL). Asking a question in the chat should
+  return a real LLM answer, not the old `(mock response — backend not wired yet)` placeholder.
 
 ### Troubleshooting
 
@@ -84,21 +95,29 @@ npm run dev
 | Port `7474`/`7687` already in use | Another Neo4j instance is running — stop it, or change the port mapping in `docker-compose.yml`. |
 | Neo4j container never becomes healthy | `docker logs industrial-ki-neo4j` to see why; a first boot can take ~30-60s. |
 | `GROQ_API_KEY` missing errors | Either add a key to `.env`, or set up Ollama locally and leave `GROQ_API_KEY` blank. |
-| `pip install -r requirements.txt` fails on a package | Some ingestion libs (e.g. `unstructured`) pull in native deps; check the error for a missing system library and install it (e.g. `brew install libmagic` on macOS). |
+| `pip install -r requirements.txt` fails with a `SyntaxError` in `olefile2.py` (or a `sys.stdout.encoding` `TypeError` right after) | You're on the Xcode Command Line Tools' Python 3.9, not a real Python 3.10+. Rebuild the venv with an explicit modern interpreter (see Prerequisites). |
+| `pip install -r requirements.txt` fails on some other package | Some ingestion libs (e.g. `unstructured`) pull in native deps; check the error for a missing system library and install it (e.g. `brew install libmagic` on macOS). |
+| `Address already in use` on port 8000 when starting `uvicorn` | Something else on your machine is already bound to 8000 — often another local project, or one of its Docker containers, left running. `lsof -i :8000 -sTCP:LISTEN` shows what. Rather than kill an unrelated process, just change `API_PORT`/`VITE_API_BASE_URL` in your own `.env` to a free port (e.g. 8001) — `.env` is gitignored, so this is a per-machine setting and won't affect other developers, who may well have 8000 free. |
+| Frontend shows a red "Couldn't reach the knowledge base" bubble | The backend isn't running, is on the wrong port, or CORS is rejecting the origin — confirm `VITE_API_BASE_URL` in `.env` matches the port `uvicorn` printed. |
 
 ### Current build status
 
 This repo is being built incrementally, issue by issue (see [Issues](../../issues)). Not
-everything above works yet — check an issue's status before assuming a step is live:
+everything below is the final feature — check an issue's status before assuming a step is done:
 - ✅ Repo scaffold, `.env.example`, Docker Compose for Neo4j (#1, #2)
 - ✅ LLM client (Groq + Ollama fallback) + smoke test (#6)
 - ✅ Frontend scaffold: React + TS + Vite + Tailwind (#21)
-- ✅ Chat UI (#22) — mock responses until #24 wires up the real API
+- ✅ Chat UI (#22)
 - ✅ Public seed documents in `data/raw/` (#3) — 8 docs / 5 types, see `manifest.csv`
 - ✅ Synthetic "Plant Alpha" dataset in `data/synthetic/` (#4) — 17 docs, P-101 recurrence story
 - ✅ PDF/text parser (#7) — `backend/ingestion/parse_docs.py`
 - ✅ OCR pipeline (#8) — `backend/ingestion/ocr.py`, 99.3% legibility on the scanned sample
-- ⏳ Chunking (#9), RAG backend — in progress
+- 🟡 `/query` endpoint (`backend/main.py`) and frontend wiring (`frontend/src/lib/api.ts`) exist
+  as a **temporary stub** — chat calls the LLM directly with no retrieval, no citations, no
+  confidence scoring, so the demo isn't blocked on a mock. This is *not* the real #19/#24: those
+  stay open until the actual RAG pipeline (#16–#18) is wired in and citation cards (#23) land.
+- ⏳ Next up per the dependency chain: chunking (#9) and KG schema (#5) are the two currently
+  unblocked issues — everything else in the ingestion/RAG/KG tracks is blocked behind one of them.
 
 ## Architecture & Planning Notes
 
