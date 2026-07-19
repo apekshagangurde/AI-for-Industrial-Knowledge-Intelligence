@@ -97,7 +97,8 @@ everything above works yet — check an issue's status before assuming a step is
 - ✅ Public seed documents in `data/raw/` (#3) — 8 docs / 5 types, see `manifest.csv`
 - ✅ Synthetic "Plant Alpha" dataset in `data/synthetic/` (#4) — 17 docs, P-101 recurrence story
 - ✅ PDF/text parser (#7) — `backend/ingestion/parse_docs.py`
-- ⏳ OCR (#8), chunking (#9), RAG backend — in progress
+- ✅ OCR pipeline (#8) — `backend/ingestion/ocr.py`, 99.3% legibility on the scanned sample
+- ⏳ Chunking (#9), RAG backend — in progress
 
 ## Architecture & Planning Notes
 
