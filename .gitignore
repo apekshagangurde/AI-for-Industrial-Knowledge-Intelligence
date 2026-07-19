@@ -31,3 +31,7 @@ neo4j_data/
 .DS_Store
 .vscode/
 .idea/
+
+# Backend virtualenv
+backend/.venv/
+backend/.pytest_cache/
