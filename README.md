@@ -159,11 +159,22 @@ everything below is the final feature — check an issue's status before assumin
   (Note: an earlier version of this note described entity_extract.py *and* graph_writer.py as
   both done, hit by a Groq quota error mid-run — that work was never actually committed and
   couldn't be recovered from git history; #12 above is a fresh, tested implementation.)
-- 🟡 Not yet done: **Neo4j graph writer (#13)** — the KG schema (#5) and entity extraction
-  (#12) are ready, but nothing writes entities into the graph yet, so it's still empty.
-- 🟡 Not yet done: **KG-aware retrieval (#16)** — blocked on #13. #19 (the "official" endpoint
-  issue, which requires #16 + #18 together) stays open until #16 lands, even though `/query`
-  is functionally live and handles failures gracefully (#20).
+- 🟡 In progress, blocked on Groq's **daily** token cap: **Neo4j graph writer (#13)** —
+  `backend/ingestion/graph_writer.py` writes Document/Equipment/Person/Regulation nodes and
+  REFERENCES/MAINTAINS/GOVERNED_BY/REPORTED_BY/LOCATED_IN relationships per
+  `docs/kg-schema.md`, all via MERGE (verified idempotent — 6 unit tests against a fake
+  Neo4j driver). Also applied #5's constraints for real: an earlier status note claimed 7
+  constraints were live, but `SHOW CONSTRAINTS` came back empty — applied
+  `kg_constraints.cypher` and reverified. Running against the full corpus hit the same
+  100K-tokens/day Groq wall that blocked an earlier (uncommitted, lost) attempt at this same
+  ticket: 10/26 documents written before the cap, 2 skipped intentionally (P&ID images, #11),
+  14 blocked on quota. Current graph: 4/6 equipment nodes (missing T-201, V-301), 2
+  relationship types live. `python -m ingestion.graph_writer` picks up where this left off
+  once the quota resets (or with `GROQ_API_KEY` blanked for the Ollama fallback) —
+  entity_extract.py's cache means already-processed chunks aren't re-billed.
+- 🟡 Not yet done: **KG-aware retrieval (#16)** — blocked on #13 finishing. #19 (the "official"
+  endpoint issue, which requires #16 + #18 together) stays open until #16 lands, even though
+  `/query` is functionally live and handles failures gracefully (#20).
 
 ## Architecture & Planning Notes
 
