@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from rag.confidence import score_confidence
 from rag.generate import generate_answer
 from rag.retriever import retrieve
 
@@ -49,8 +50,6 @@ def query(request: QueryRequest):
 
     chunks = retrieve(question, top_k=5)
     result = generate_answer(question, chunks)
-
-    top_scores = [c["score"] for c in chunks[:3]]
-    confidence = sum(top_scores) / len(top_scores) if top_scores else 0.0
+    confidence = score_confidence(chunks)
 
     return QueryResponse(answer=result["answer"], citations=result["citations"], confidence=confidence)
