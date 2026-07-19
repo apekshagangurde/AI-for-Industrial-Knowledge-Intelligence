@@ -172,9 +172,15 @@ everything below is the final feature — check an issue's status before assumin
   relationship types live. `python -m ingestion.graph_writer` picks up where this left off
   once the quota resets (or with `GROQ_API_KEY` blanked for the Ollama fallback) —
   entity_extract.py's cache means already-processed chunks aren't re-billed.
-- 🟡 Not yet done: **KG-aware retrieval (#16)** — blocked on #13 finishing. #19 (the "official"
-  endpoint issue, which requires #16 + #18 together) stays open until #16 lands, even though
-  `/query` is functionally live and handles failures gracefully (#20).
+- ✅ KG-aware query expansion (#16) — `backend/rag/kg_expand.py`, wired into `/query`.
+  Detects known equipment tags in the question via regex, pulls every chunk from
+  documents the graph links to that equipment straight out of Chroma by doc_id (not just
+  re-ranking the existing top-k), and boosts them to the front. Verified live: for "What
+  issues has C-501 had recently?", one of the two C-501 incident chunks ranked #6 on pure
+  vector similarity (outside the top-5) — expand_query pulls it in, and the generated
+  answer ends up citing both, including a root-cause detail that only exists in the chunk
+  vector search alone would have missed. Works today against the 4/6 equipment nodes #13
+  has populated so far; the rest fill in once #13 finishes.
 
 ## Architecture & Planning Notes
 
