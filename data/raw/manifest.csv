@@ -1,0 +1,9 @@
+filename,source_url,doc_type,license_notes
+osha_301_incident_report_form.pdf,https://labor.hawaii.gov/hiosh/files/2024/12/OSHA-301.pdf,incident_report,US government work - public domain
+osha_incident_investigation_guide.pdf,https://www.osha.gov/sites/default/files/IncInvGuide4Empl_Dec2015.pdf,procedure,US government work - public domain
+osha_accident_investigation_outline.pdf,https://www.osha.gov/sites/default/files/2018-11/fy14_sh-27638-sh4_Incident-Investigation-Outline.pdf,procedure,US government work - public domain
+osha_process_safety_management.pdf,https://www.osha.gov/sites/default/files/publications/OSHA3132.pdf,regulation,US government work (OSHA Publication 3132) - public domain
+india_factories_act_1948.pdf,https://www.indiacode.nic.in/bitstream/123456789/6323/1/factories_act_1948.pdf,regulation,Indian government legislation - public domain
+pid_pump_with_tank_sample.svg,https://upload.wikimedia.org/wikipedia/commons/b/bf/Pump_with_tank_pid_en.svg,pid_drawing,CC BY-SA 3.0 - credit: Con-struct (Wikimedia Commons)
+pid_iso10628_sample.png,https://upload.wikimedia.org/wikipedia/commons/d/d6/RI_Sample_ISO.png,pid_drawing,Public domain - credit: Geichler (Wikimedia Commons)
+centrifugal_pump_om_manual.pdf,http://www.plant-maintenance.com/articles/centrifugalpumps.pdf,om_manual,Publicly hosted reference article - used for hackathon/demo purposes only

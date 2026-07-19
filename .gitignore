@@ -14,10 +14,10 @@ node_modules/
 frontend/dist/
 frontend/.vite/
 
-# Data (keep folder structure, ignore actual documents/generated content)
-data/raw/*
-!data/raw/.gitkeep
-!data/raw/manifest.csv
+# Data
+# raw/ is committed: small (~5MB), public-domain/CC-licensed seed docs (see
+# manifest.csv), and keeping them in-repo means the corpus doesn't depend on
+# external sites staying up during the hackathon.
 data/synthetic/*
 !data/synthetic/.gitkeep
 data/processed/*
