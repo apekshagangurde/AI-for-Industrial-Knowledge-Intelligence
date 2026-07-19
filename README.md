@@ -150,14 +150,20 @@ everything below is the final feature — check an issue's status before assumin
   CSS min-content sizing quirk in the flex chain — fixed by dropping `break-words` in favor of
   `inline-block` shrink-to-fit sizing). Not yet visually confirmed — no screenshot/browser tool
   available in this environment, pending manual check.
-- 🟡 In progress, blocked on LLM quota: **entity extraction (#12) + graph writer (#13)** —
-  `backend/ingestion/entity_extract.py` and `backend/ingestion/graph_writer.py` exist and work
-  (verified >80% equipment-tag recognition, MERGE-based idempotent writes), but the full-corpus
-  run hit Groq's free-tier **daily** token cap partway through (3 of 24 documents written) and
-  had to be aborted. Needs a fresh quota window (or Ollama) to finish. See Troubleshooting.
-- 🟡 Not yet done: **KG-aware retrieval (#16)** — blocked on #13 actually finishing. #19 (the
-  "official" endpoint issue, which requires #16 + #18 together) stays open until #16 lands, even
-  though `/query` is functionally live and now handles failures gracefully (#20).
+- ✅ Entity extraction (#12) — `backend/ingestion/entity_extract.py` pulls
+  `{equipment_tags, parameters, personnel, dates, regulation_refs}` per chunk via the LLM,
+  cached on disk by chunk_id (`backend/entity_cache.json`, gitignored) so re-runs don't
+  re-spend Groq tokens. Verified 100% equipment-tag recall on 10 real sample chunks (>80%
+  threshold), and confirmed personnel/dates extract correctly where the text actually
+  mentions them, not just equipment tags.
+  (Note: an earlier version of this note described entity_extract.py *and* graph_writer.py as
+  both done, hit by a Groq quota error mid-run — that work was never actually committed and
+  couldn't be recovered from git history; #12 above is a fresh, tested implementation.)
+- 🟡 Not yet done: **Neo4j graph writer (#13)** — the KG schema (#5) and entity extraction
+  (#12) are ready, but nothing writes entities into the graph yet, so it's still empty.
+- 🟡 Not yet done: **KG-aware retrieval (#16)** — blocked on #13. #19 (the "official" endpoint
+  issue, which requires #16 + #18 together) stays open until #16 lands, even though `/query`
+  is functionally live and handles failures gracefully (#20).
 
 ## Architecture & Planning Notes
 
