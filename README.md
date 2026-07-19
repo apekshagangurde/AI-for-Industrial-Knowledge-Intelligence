@@ -90,7 +90,8 @@ everything above works yet — check an issue's status before assuming a step is
 - ✅ Repo scaffold, `.env.example`, Docker Compose for Neo4j (#1, #2)
 - ✅ LLM client (Groq + Ollama fallback) + smoke test (#6)
 - ✅ Frontend scaffold: React + TS + Vite + Tailwind (#21)
-- ⏳ Ingestion pipeline, RAG backend, chat UI, and everything else — in progress
+- ✅ Chat UI (#22) — mock responses until #24 wires up the real API
+- ⏳ Ingestion pipeline, RAG backend, and everything else — in progress
 
 ## Architecture & Planning Notes
 
