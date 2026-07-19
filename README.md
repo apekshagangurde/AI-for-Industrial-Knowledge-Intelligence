@@ -26,13 +26,69 @@ confidence scores). See open [Issues](../../issues) for the full build breakdown
 └── README.md
 ```
 
-## Getting Started
+## Prerequisites
 
-1. Copy `.env.example` to `.env` and fill in `GROQ_API_KEY` (free tier at
-   [console.groq.com](https://console.groq.com)) — or leave blank to use the local Ollama fallback.
-2. Bring up local infra: `docker compose up -d` (Neo4j + Chroma — see issue #2).
-3. Backend: `cd backend && pip install -r requirements.txt`
-4. Frontend: `cd frontend && npm install && npm run dev` (after issue #21 scaffolds it)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (running, not just installed)
+- Python 3.10+
+- Node.js 18+ and npm
+- A free [Groq API key](https://console.groq.com) (console.groq.com → API Keys → Create API Key)
+  — takes about a minute, no credit card. Local [Ollama](https://ollama.com) works as an offline
+  fallback if you'd rather not sign up for anything.
+
+## Quick Start
+
+```bash
+# 1. Clone and enter the repo
+git clone https://github.com/apekshagangurde/AI-for-Industrial-Knowledge-Intelligence.git
+cd AI-for-Industrial-Knowledge-Intelligence
+
+# 2. Configure environment
+cp .env.example .env
+# open .env and paste your GROQ_API_KEY (or set up Ollama — see .env.example comments)
+
+# 3. Start local infra (Neo4j knowledge graph)
+docker compose up -d
+
+# 4. Backend — Python virtual env + dependencies
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cd ..
+
+# 5. Frontend — once issue #21 has scaffolded frontend/ with Vite
+cd frontend
+npm install
+npm run dev
+```
+
+### Verify your setup
+
+- **Neo4j:** `docker ps --filter name=industrial-ki-neo4j` should show `Up ... (healthy)`.
+  Open [http://localhost:7474](http://localhost:7474) and log in with the `NEO4J_USER` /
+  `NEO4J_PASSWORD` from your `.env` (defaults: `neo4j` / `changeme`).
+- **Groq/LLM:** once issue #6 lands, run `python backend/scripts/llm_smoke_test.py "hello"` —
+  it should print a real model response.
+- **Backend API:** once issue #19 lands, `curl http://localhost:8000/query -X POST -d '{"question":"..."}'`
+  should return JSON with `answer`, `citations`, and `confidence`.
+- **Frontend:** once issue #21 lands, `npm run dev` in `frontend/` should serve the app at
+  [http://localhost:5173](http://localhost:5173).
+
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `docker compose up -d` hangs or errors | Make sure Docker Desktop is actually running (`docker info` should not error), not just installed. |
+| Port `7474`/`7687` already in use | Another Neo4j instance is running — stop it, or change the port mapping in `docker-compose.yml`. |
+| Neo4j container never becomes healthy | `docker logs industrial-ki-neo4j` to see why; a first boot can take ~30-60s. |
+| `GROQ_API_KEY` missing errors | Either add a key to `.env`, or set up Ollama locally and leave `GROQ_API_KEY` blank. |
+| `pip install -r requirements.txt` fails on a package | Some ingestion libs (e.g. `unstructured`) pull in native deps; check the error for a missing system library and install it (e.g. `brew install libmagic` on macOS). |
+
+### Current build status
+
+This repo is being built incrementally, issue by issue (see [Issues](../../issues)). Not
+everything above works yet — check an issue's status before assuming a step is live:
+- ✅ Repo scaffold, `.env.example`, Docker Compose for Neo4j (#1, #2)
+- ⏳ LLM client + smoke test (#6), frontend scaffold (#21), and everything else — in progress
 
 ## Architecture & Planning Notes
 
