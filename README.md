@@ -93,7 +93,8 @@ everything above works yet — check an issue's status before assuming a step is
 - ✅ Chat UI (#22) — mock responses until #24 wires up the real API
 - ✅ Public seed documents in `data/raw/` (#3) — 8 docs / 5 types, see `manifest.csv`
 - ✅ Synthetic "Plant Alpha" dataset in `data/synthetic/` (#4) — 17 docs, P-101 recurrence story
-- ⏳ Ingestion pipeline, RAG backend — in progress
+- ✅ PDF/text parser (#7) — `backend/ingestion/parse_docs.py`
+- ⏳ OCR (#8), chunking (#9), RAG backend — in progress
 
 ## Architecture & Planning Notes
 
