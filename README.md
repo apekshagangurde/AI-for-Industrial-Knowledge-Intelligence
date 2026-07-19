@@ -133,12 +133,16 @@ everything below is the final feature — check an issue's status before assumin
   with a confidence-colored badge
 - ✅ `/query` wired end-to-end (#24) — `backend/main.py` now calls retrieve → generate for
   real, not a mock; frontend renders citation cards and confidence; loading/error states handled
-- 🟡 Not yet done: **KG-aware retrieval (#16)** — retrieval above is vector-only, no Neo4j
-  entity boost/filter, so #19 (the "official" endpoint issue, which requires #16-#18 together)
-  stays open even though `/query` is functionally live. **#20** (structured error handling +
-  pytest coverage for `/query`) is also still open — only basic empty-question validation exists
-  so far. **#5** (KG schema) and everything in the knowledge-graph track (#12, #13) remain
-  unblocked-but-not-started.
+- ✅ Confidence scoring (#18) — `backend/rag/confidence.py`, avg top-3 similarity; verified
+  visibly lower for an out-of-corpus question (0.50) than an in-corpus one (0.77)
+- ✅ KG schema + Neo4j constraints (#5) — `docs/kg-schema.md` defines the node/relationship
+  shape; `scripts/kg_constraints.cypher` applied to the running Neo4j container (7 uniqueness
+  constraints, verified idempotent)
+- 🟡 Not yet done: **KG-aware retrieval (#16)** — retrieval is still vector-only, nothing writes
+  to Neo4j yet (that's #12 entity extraction + #13 graph writer, both unblocked but not started).
+  #19 (the "official" endpoint issue, which requires #16 + #18 together) stays open until #16
+  lands, even though `/query` is functionally live. **#20** (structured error handling + pytest
+  coverage for `/query`) is also still open — only basic empty-question validation exists so far.
 
 ## Architecture & Planning Notes
 
