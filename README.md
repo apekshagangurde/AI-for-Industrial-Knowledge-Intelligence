@@ -89,7 +89,8 @@ This repo is being built incrementally, issue by issue (see [Issues](../../issue
 everything above works yet — check an issue's status before assuming a step is live:
 - ✅ Repo scaffold, `.env.example`, Docker Compose for Neo4j (#1, #2)
 - ✅ LLM client (Groq + Ollama fallback) + smoke test (#6)
-- ⏳ Frontend scaffold (#21), ingestion pipeline, RAG backend, and everything else — in progress
+- ✅ Frontend scaffold: React + TS + Vite + Tailwind (#21)
+- ⏳ Ingestion pipeline, RAG backend, chat UI, and everything else — in progress
 
 ## Architecture & Planning Notes
 
