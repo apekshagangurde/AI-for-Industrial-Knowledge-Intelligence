@@ -88,7 +88,8 @@ npm run dev
 This repo is being built incrementally, issue by issue (see [Issues](../../issues)). Not
 everything above works yet — check an issue's status before assuming a step is live:
 - ✅ Repo scaffold, `.env.example`, Docker Compose for Neo4j (#1, #2)
-- ⏳ LLM client + smoke test (#6), frontend scaffold (#21), and everything else — in progress
+- ✅ LLM client (Groq + Ollama fallback) + smoke test (#6)
+- ⏳ Frontend scaffold (#21), ingestion pipeline, RAG backend, and everything else — in progress
 
 ## Architecture & Planning Notes
 
