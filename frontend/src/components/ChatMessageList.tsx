@@ -1,4 +1,5 @@
 import type { ChatMessage } from '../types/chat'
+import { CitationCard } from './CitationCard'
 
 interface Props {
   messages: ChatMessage[]
@@ -14,17 +15,25 @@ export function ChatMessageList({ messages, isLoading }: Props) {
         </p>
       )}
       {messages.map((message) => (
-        <div
-          key={message.id}
-          className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
-            message.role === 'user'
-              ? 'ml-auto bg-blue-600 text-white'
-              : message.role === 'error'
-                ? 'mr-auto bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
-                : 'mr-auto bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100'
-          }`}
-        >
-          {message.content}
+        <div key={message.id} className={message.role === 'user' ? 'ml-auto' : 'mr-auto'}>
+          <div
+            className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+              message.role === 'user'
+                ? 'bg-blue-600 text-white'
+                : message.role === 'error'
+                  ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'
+                  : 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100'
+            }`}
+          >
+            {message.content}
+          </div>
+          {message.citations && message.citations.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {message.citations.map((citation) => (
+                <CitationCard key={citation.chunk_id} citation={citation} />
+              ))}
+            </div>
+          )}
         </div>
       ))}
       {isLoading && (

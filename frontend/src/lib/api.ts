@@ -1,8 +1,9 @@
 import { API_BASE_URL } from './config'
+import type { Citation } from '../types/chat'
 
 export interface QueryResponse {
   answer: string
-  citations: unknown[]
+  citations: Citation[]
   confidence: number
 }
 

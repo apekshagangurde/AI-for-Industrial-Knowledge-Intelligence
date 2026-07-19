@@ -63,6 +63,12 @@ docker compose up -d
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+
+# 4a. Build the vector index — required once (and after any change to data/raw
+# or data/synthetic) before /query can return anything grounded. Downloads the
+# bge-small-en-v1.5 embedding model on first run.
+python -m ingestion.embed_store
+
 uvicorn main:app --host 0.0.0.0 --port "${API_PORT:-8000}" --reload
 cd ..
 
@@ -79,13 +85,15 @@ pnpm run dev
   `NEO4J_PASSWORD` from your `.env` (defaults: `neo4j` / `changeme`).
 - **Groq/LLM:** `python backend/scripts/llm_smoke_test.py "hello"` should print a real model
   response.
-- **Backend API:** with `uvicorn` running, `curl http://localhost:8000/query -X POST -d
-  '{"question":"hello"}'` (swap the port if you changed `API_PORT`) should return JSON with
-  `answer`, `citations`, and `confidence`.
+- **Backend API:** with `uvicorn` running (and `ingestion.embed_store` already run at least
+  once), `curl http://localhost:8000/query -X POST -d '{"question":"why did pump P-101 fail"}'`
+  (swap the port if you changed `API_PORT`) should return a grounded answer citing the P-101
+  incident reports, with non-empty `citations` and a `confidence` around 0.7-0.8.
 - **Frontend:** `pnpm run dev` in `frontend/` serves the app on the first free port starting at
   [http://localhost:5173](http://localhost:5173) (Vite bumps the port if 5173+ are already in
   use — check the terminal output for the actual URL). Asking a question in the chat should
-  return a real LLM answer, not the old `(mock response — backend not wired yet)` placeholder.
+  return a real, cited answer with citation cards below it, not the old
+  `(mock response — backend not wired yet)` placeholder.
 
 ### Troubleshooting
 
@@ -99,6 +107,8 @@ pnpm run dev
 | `pip install -r requirements.txt` fails on some other package | Some ingestion libs (e.g. `unstructured`) pull in native deps; check the error for a missing system library and install it (e.g. `brew install libmagic` on macOS). |
 | `Address already in use` on port 8000 when starting `uvicorn` | Something else on your machine is already bound to 8000 — often another local project, or one of its Docker containers, left running. `lsof -i :8000 -sTCP:LISTEN` shows what. Rather than kill an unrelated process, just change `API_PORT`/`VITE_API_BASE_URL` in your own `.env` to a free port (e.g. 8001) — `.env` is gitignored, so this is a per-machine setting and won't affect other developers, who may well have 8000 free. |
 | Frontend shows a red "Couldn't reach the knowledge base" bubble | The backend isn't running, is on the wrong port, or CORS is rejecting the origin — confirm `VITE_API_BASE_URL` in `.env` matches the port `uvicorn` printed. |
+| `/query` answers are always "nothing relevant was found" | `ingestion.embed_store` hasn't been run yet (or `CHROMA_PATH` points somewhere empty) — run `python -m ingestion.embed_store` from `backend/` with the venv active. |
+| `embed_store.py` skips a doc with `tesseract is not installed` | Install the Tesseract binary (see Prerequisites) and make sure it's on `PATH`, then re-run ingestion — that one doc is skipped, not fatal, on the first pass. |
 
 ### Current build status
 
@@ -112,12 +122,23 @@ everything below is the final feature — check an issue's status before assumin
 - ✅ Synthetic "Plant Alpha" dataset in `data/synthetic/` (#4) — 17 docs, P-101 recurrence story
 - ✅ PDF/text parser (#7) — `backend/ingestion/parse_docs.py`
 - ✅ OCR pipeline (#8) — `backend/ingestion/ocr.py`, 99.3% legibility on the scanned sample
-- 🟡 `/query` endpoint (`backend/main.py`) and frontend wiring (`frontend/src/lib/api.ts`) exist
-  as a **temporary stub** — chat calls the LLM directly with no retrieval, no citations, no
-  confidence scoring, so the demo isn't blocked on a mock. This is *not* the real #19/#24: those
-  stay open until the actual RAG pipeline (#16–#18) is wired in and citation cards (#23) land.
-- ⏳ Next up per the dependency chain: chunking (#9) and KG schema (#5) are the two currently
-  unblocked issues — everything else in the ingestion/RAG/KG tracks is blocked behind one of them.
+- ✅ Chunking (#9) — `backend/ingestion/chunker.py`, section-boundary chunking with a
+  ~500-token sliding-window fallback; tables always kept as one whole chunk
+- ✅ Embedding + Chroma ingestion (#10) — `backend/ingestion/embed_store.py`
+  (`bge-small-en-v1.5`), 24 docs / 192 chunks indexed from `data/raw` + `data/synthetic`
+- ✅ Vector retrieval (#15) — `backend/rag/retriever.py`
+- ✅ Answer generation with citations (#17) — `backend/rag/generate.py`; answers cite `[n]`
+  inline, mapped back to `{doc_name, page, snippet, score}`
+- ✅ Citation card component (#23) — `frontend/src/components/CitationCard.tsx`, expandable,
+  with a confidence-colored badge
+- ✅ `/query` wired end-to-end (#24) — `backend/main.py` now calls retrieve → generate for
+  real, not a mock; frontend renders citation cards and confidence; loading/error states handled
+- 🟡 Not yet done: **KG-aware retrieval (#16)** — retrieval above is vector-only, no Neo4j
+  entity boost/filter, so #19 (the "official" endpoint issue, which requires #16-#18 together)
+  stays open even though `/query` is functionally live. **#20** (structured error handling +
+  pytest coverage for `/query`) is also still open — only basic empty-question validation exists
+  so far. **#5** (KG schema) and everything in the knowledge-graph track (#12, #13) remain
+  unblocked-but-not-started.
 
 ## Architecture & Planning Notes
 

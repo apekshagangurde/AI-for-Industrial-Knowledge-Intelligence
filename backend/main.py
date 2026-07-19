@@ -1,11 +1,12 @@
-"""FastAPI entrypoint. Issue #19: minimal /query endpoint so the frontend
-chat panel (issue #24) has a real backend to call instead of its mock.
+"""FastAPI entrypoint (#19): exposes the RAG pipeline (#15 retrieval + #17
+generation) over HTTP for the frontend chat panel (#24).
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from common.llm_client import complete
+from rag.generate import generate_answer
+from rag.retriever import retrieve
 
 app = FastAPI(title="Industrial Knowledge Intelligence API")
 
@@ -21,9 +22,17 @@ class QueryRequest(BaseModel):
     question: str
 
 
+class Citation(BaseModel):
+    doc_name: str
+    page: int
+    snippet: str
+    chunk_id: str
+    score: float
+
+
 class QueryResponse(BaseModel):
     answer: str
-    citations: list = []
+    citations: list[Citation] = []
     confidence: float = 0.0
 
 
@@ -34,5 +43,14 @@ def health():
 
 @app.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest):
-    answer = complete(request.question)
-    return QueryResponse(answer=answer, citations=[], confidence=0.5)
+    question = request.question.strip()
+    if not question:
+        raise HTTPException(status_code=422, detail="question must not be empty")
+
+    chunks = retrieve(question, top_k=5)
+    result = generate_answer(question, chunks)
+
+    top_scores = [c["score"] for c in chunks[:3]]
+    confidence = sum(top_scores) / len(top_scores) if top_scores else 0.0
+
+    return QueryResponse(answer=result["answer"], citations=result["citations"], confidence=confidence)

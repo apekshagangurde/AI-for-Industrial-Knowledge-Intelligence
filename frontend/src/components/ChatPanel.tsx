@@ -19,6 +19,8 @@ export function ChatPanel() {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: response.answer,
+        citations: response.citations,
+        confidence: response.confidence,
       }
       setMessages((prev) => [...prev, assistantMessage])
     } catch {
