@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 from rag.confidence import score_confidence
 from rag.generate import generate_answer
+from rag.kg_expand import expand_query
 from rag.retriever import retrieve
 
 app = FastAPI(title="Industrial Knowledge Intelligence API")
@@ -59,6 +60,7 @@ def query(request: QueryRequest):
 
     try:
         chunks = retrieve(question, top_k=5)
+        chunks = expand_query(question, chunks, top_k=5)
         result = generate_answer(question, chunks)
     except Exception:
         logger.exception("query failed for question=%r", question)
