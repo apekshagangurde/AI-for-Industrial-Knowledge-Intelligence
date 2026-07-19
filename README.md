@@ -1,56 +1,93 @@
-Verdict: Yes, this is doable in a hackathon — with the right cut
+# AI for Industrial Knowledge Intelligence
 
-The five bullets in the brief are five separate products. Building all five deeply in 24-72 hrs with a 4-person team and free tools is not realistic. The trick is: build one shared substrate (ingestion → knowledge graph → vector index) once, then expose it through one deep feature (RAG Copilot) and three thin agentic "views" on top of the same data — compliance check, RCA lookup, lessons-learned alert. Judges see the full platform story; you only really built one hard thing.
+An AI-powered platform that ingests heterogeneous industrial documents (engineering drawings,
+maintenance records, safety procedures, inspection reports, operating instructions) and makes
+their collective intelligence queryable via a knowledge-graph-aware RAG copilot — plus thin
+agentic slices for compliance checking, root-cause analysis, and lessons-learned alerts.
 
-Architecture (all free/open-source)
+Flagship feature: **Expert Knowledge Copilot** (RAG + Knowledge Graph fusion, with citations and
+confidence scores). See open [Issues](../../issues) for the full build breakdown, grouped by
+`track:*` labels.
 
-1. Ingestion (shared substrate)
-- PDFs/text: unstructured (OSS) or pdfplumber/PyMuPDF for layout-aware parsing + table extraction
-- Scanned docs: Tesseract OCR (or PaddleOCR if quality matters)
-- P&ID drawings: don't build real CV symbol detection — too risky for 72h. Instead feed sample P&ID images to a vision LLM (Qwen2-VL via Ollama, or Claude/GPT-4V free trial credits) with a prompt asking for equipment tags + connections as JSON. Looks impressive, costs almost nothing to build.
-- Entity extraction: one LLM call per doc chunk with a JSON schema (equipment tags, parameters, personnel, dates, regulation refs)
+## Project Structure
 
-2. Knowledge Graph
-- Neo4j Aura Free tier (hosted, free, has a nice browser UI — good for demo) or local Neo4j Community via Docker
-- Schema: Equipment, Document, Procedure, Person, Regulation, Incident nodes; MAINTAINS, REFERENCES, GOVERNED_BY, REPORTED_BY edges
+```
+.
+├── backend/          # Python: ingestion, RAG, knowledge graph, API (FastAPI)
+├── frontend/          # React + TypeScript + Tailwind chat UI (scaffolded in issue #21)
+├── data/
+│   ├── raw/           # Public seed documents (OSHA, PESO/OISD, sample P&IDs) — issue #3
+│   ├── synthetic/      # Generated "Plant Alpha" dataset — issue #4
+│   └── processed/      # Pipeline output (parsed/chunked docs) — gitignored
+├── scripts/           # One-off setup/utility scripts (KG constraints, smoke tests)
+├── docs/              # Architecture notes, KG schema, demo script/slides
+├── docker-compose.yml  # Local Neo4j + Chroma — issue #2
+├── .env.example        # Required environment variables (copy to .env)
+└── README.md
+```
 
-3. RAG Copilot (the flagship — go deep here)
-- Embeddings: local/free via sentence-transformers (bge-small-en-v1.5) — no API cost
-- Vector DB: Chroma (embedded, zero infra) — fastest to stand up
-- Generation LLM: Groq free tier (Llama 3.1/3.3, very fast, generous free limits) — best for a live demo; Ollama locally as offline fallback
-- The differentiator vs. plain RAG: query the KG first for the equipment/entity mentioned, use its linked documents to boost/filter vector retrieval, then generate with inline citations + a confidence score from retrieval similarity
-- Frontend: responsive React/Tailwind PWA (not native) — satisfies "works on mobile for field techs" cheaply
+## Getting Started
 
-4. Thin slices (reuse #1-3, don't build new pipelines)
-- Compliance check: preset prompt template — "check procedure X against regulation Y" over the same corpus
-- RCA lookup: given an equipment tag, pull KG-linked failure history + manual sections, ask LLM to reason about likely root causes (no real ML model — not feasible without sensor data anyway)
-- Lessons-learned alert: on ingest of a new doc, run a similarity search against past incident embeddings, surface top-3 matches — cheap, high demo value
+1. Copy `.env.example` to `.env` and fill in `GROQ_API_KEY` (free tier at
+   [console.groq.com](https://console.groq.com)) — or leave blank to use the local Ollama fallback.
+2. Bring up local infra: `docker compose up -d` (Neo4j + Chroma — see issue #2).
+3. Backend: `cd backend && pip install -r requirements.txt`
+4. Frontend: `cd frontend && npm install && npm run dev` (after issue #21 scaffolds it)
 
-The real blocker: data
+## Architecture & Planning Notes
 
-You won't have real plant documents. Solve it with:
-- Public sources: OSHA incident CSVs, PESO/OISD/Factory Act text (public PDFs), public P&ID symbol sheets
-- LLM-synthesized data for one fictional plant (work orders, inspection reports, incident logs) — lets you build one coherent demo narrative (e.g. pump P-101 → work order → manual section → regulation → similar past incident) that ties every feature together
+The five capability areas in the challenge brief (universal ingestion, expert copilot,
+maintenance/RCA, compliance intelligence, lessons-learned) are five separate products. Building
+all five deeply in a hackathon timeframe isn't realistic, so the approach here is: build one
+shared substrate (ingestion → knowledge graph → vector index) once, then expose it through one
+deep feature — the **RAG Copilot** — and three thin agentic views on top of the same data:
+compliance check, RCA lookup, and a lessons-learned similarity alert.
 
-Team split (2-4 people)
+**Ingestion (shared substrate)**
+- PDFs/text: `unstructured` / `pdfplumber` for layout-aware parsing + table extraction
+- Scanned docs: Tesseract OCR
+- P&ID drawings: no custom CV — a vision LLM (Ollama Qwen2-VL, or Groq/Claude vision) extracts
+  equipment tags + connections as JSON from the image directly
+- Entity extraction: one LLM call per chunk against a JSON schema (equipment tags, parameters,
+  personnel, dates, regulation refs)
 
-┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
-│ Person │                                          Owns
-├────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-│ A      │ Ingestion + parsing + embeddings + vector DB, dataset curation
-├────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-│ B      │ Knowledge graph schema, entity extraction, KG-RAG fusion logic
-├────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-│ C      │ RAG backend (retrieval + citations + confidence) + 3 thin-slice endpoints
-├────────┼─────────────────────────────────────────────────────────────────────────────────────────┤
-│ D      │ Frontend: chat UI, citation cards, graph viz (react-force-graph), mobile responsi
-└────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
+**Knowledge Graph**
+- Neo4j (local via Docker, or Aura Free tier)
+- Schema: `Equipment`, `Document`, `Procedure`, `Person`, `Regulation`, `Incident` nodes;
+  `MAINTAINS`, `REFERENCES`, `GOVERNED_BY`, `REPORTED_BY` relationships
 
-Rough timeline (72h)
+**RAG Copilot (flagship)**
+- Embeddings: `sentence-transformers` (`bge-small-en-v1.5`), local/free
+- Vector DB: Chroma (embedded, zero infra)
+- Generation: Groq free tier (Llama 3.1/3.3) with an Ollama local fallback
+- Differentiator vs. plain RAG: the KG is queried first for entities named in the question; its
+  linked documents boost/filter vector retrieval before generation. Answers include inline
+  citations and a confidence score derived from retrieval similarity.
+- Frontend: responsive React/Tailwind chat UI — works on mobile for field technicians, not just desktop
 
+**Thin slices (reuse the RAG substrate, no new pipelines)**
+- Compliance check: preset prompt — "check procedure X against regulation Y"
+- RCA lookup: KG-linked failure history + manual sections → LLM root-cause reasoning
+- Lessons-learned alert: similarity search against past incident embeddings on ingest
+
+**Data strategy:** real plant documents aren't available, so the corpus combines public sources
+(OSHA incident reports, PESO/OISD/Factory Act text, public P&ID symbol sheets) with an
+LLM-synthesized fictional plant ("Plant Alpha") — one coherent equipment/incident story
+(e.g. Pump P-101) that ties every feature together for the demo.
+
+**Team split**
+
+| Person | Owns |
+|---|---|
+| A | Ingestion + parsing + embeddings + vector DB, dataset curation |
+| B | Knowledge graph schema, entity extraction, KG-RAG fusion logic |
+| C | RAG backend (retrieval + citations + confidence) + thin-slice endpoints |
+| D | Frontend: chat UI, citation cards, graph viz, mobile responsiveness |
+
+**Rough timeline (72h)**
 - 0-6h: repo, dataset synthesis, Chroma+Neo4j running
 - 6-24h: ingestion + KG populated, embeddings indexed, retrieval working
 - 24-40h: RAG backend with citations, frontend chat wired up
-- 40-56h: KG-aware retrieval, 3 thin-slice endpoints, graph viz
+- 40-56h: KG-aware retrieval, thin-slice endpoints, graph viz
 - 56-68h: mobile pass, seed the "one plant" demo story end to end, bug fixes
 - 68-72h: polish + rehearse

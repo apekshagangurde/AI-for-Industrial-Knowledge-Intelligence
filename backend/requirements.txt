@@ -1,0 +1,27 @@
+# Stub — pinned versions and additions land as each ingestion/RAG ticket is built.
+
+# API
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+
+# Document parsing / OCR
+unstructured
+pdfplumber
+pytesseract
+pillow
+
+# Embeddings / vector store
+sentence-transformers
+chromadb
+
+# Knowledge graph
+neo4j
+
+# LLM clients
+groq
+ollama
+
+# Testing
+pytest

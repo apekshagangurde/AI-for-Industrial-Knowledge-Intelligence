@@ -1,0 +1,33 @@
+# Environment
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Data (keep folder structure, ignore actual documents/generated content)
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/manifest.csv
+data/synthetic/*
+!data/synthetic/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Vector DB / graph local state
+chroma_db/
+neo4j_data/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

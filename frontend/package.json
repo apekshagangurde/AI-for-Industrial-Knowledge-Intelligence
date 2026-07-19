@@ -1,0 +1,9 @@
+{
+  "name": "industrial-knowledge-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Stub — replaced by `npm create vite@latest . -- --template react-ts` in issue #21.",
+  "scripts": {
+    "dev": "echo 'Run issue #21 (Vite scaffold) first' && exit 1"
+  }
+}
