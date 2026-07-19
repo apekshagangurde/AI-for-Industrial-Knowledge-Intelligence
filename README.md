@@ -34,6 +34,9 @@ confidence scores). See open [Issues](../../issues) for the full build breakdown
 - A free [Groq API key](https://console.groq.com) (console.groq.com → API Keys → Create API Key)
   — takes about a minute, no credit card. Local [Ollama](https://ollama.com) works as an offline
   fallback if you'd rather not sign up for anything.
+- Tesseract OCR binary (needed for #8's OCR pipeline) — `pip install pytesseract` only installs
+  the Python wrapper, not the OCR engine itself: `brew install tesseract` on macOS, `apt install
+  tesseract-ocr` on Debian/Ubuntu.
 
 ## Quick Start
 
