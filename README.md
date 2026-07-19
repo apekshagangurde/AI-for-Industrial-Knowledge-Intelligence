@@ -135,6 +135,8 @@ everything below is the final feature — check an issue's status before assumin
   with a confidence-colored badge
 - ✅ `/query` wired end-to-end (#24) — `backend/main.py` now calls retrieve → generate for
   real, not a mock; frontend renders citation cards and confidence; loading/error states handled
+- ✅ `/query` API endpoint (#19) — closed once #16 landed: the endpoint now runs the full
+  retrieve → expand_query → generate → confidence chain with clean 4xx/5xx error handling (#20)
 - ✅ Confidence scoring (#18) — `backend/rag/confidence.py`, avg top-3 similarity; verified
   visibly lower for an out-of-corpus question (0.50) than an in-corpus one (0.77)
 - ✅ KG schema + Neo4j constraints (#5) — `docs/kg-schema.md` defines the node/relationship
