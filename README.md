@@ -183,6 +183,14 @@ everything below is the final feature — check an issue's status before assumin
   answer ends up citing both, including a root-cause detail that only exists in the chunk
   vector search alone would have missed. Works today against the 4/6 equipment nodes #13
   has populated so far; the rest fill in once #13 finishes.
+- ✅ `/query` endpoint fully closed (#19) — was deliberately left open pending #16 + #18
+  landing together; both are done now, so the full retrieve → expand_query → generate →
+  confidence chain (with #20's error handling) is complete.
+- ✅ End-to-end ingestion orchestrator (#14) — `backend/ingestion/run_pipeline.py` runs
+  embed_store + graph_writer as one command with a combined summary report.
+  `--skip-graph` runs just the embedding step. Ran for real: embedding succeeded fully
+  (24 docs, 192 chunks, ~18s, no quota risk), graph step honestly reported the same
+  quota-blocked state as #13 rather than failing silently.
 
 ## Architecture & Planning Notes
 
