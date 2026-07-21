@@ -192,6 +192,46 @@ everything below is the final feature — check an issue's status before assumin
   (24 docs, 192 chunks, ~18s, no quota risk), graph step honestly reported the same
   quota-blocked state as #13 rather than failing silently.
 
+### `feat/production-stack` branch (production hardening + remaining features)
+
+Additive, feature-flagged upgrades toward a real/scalable system (see
+`docs/PRODUCTION_STACK.md`), plus the remaining thin-slice features. With the new
+env flags unset, behavior is unchanged; every new dependency degrades gracefully.
+
+- ✅ **LLM gateway** — `common/llm_client.py` routes through **LiteLLM**
+  (`USE_LITELLM=1`): fallback chain, retries, JSON + vision modes. Stable
+  `complete()` signature, so no callers changed. Directly addresses the
+  single-provider Groq quota block.
+- ✅ **Hybrid retrieval** — `rag/hybrid.py`: dense + BM25 fused with RRF
+  (`HYBRID_SEARCH=1`). Big lift on exact tokens (equipment tags, `29 CFR ...`)
+  that dense-only misses.
+- ✅ **Reranking** — `rag/rerank.py`: FlashRank cross-encoder over a wide
+  candidate pool (`RERANK=1`). `/query` is now hybrid → KG-expand → rerank → generate.
+- ✅ **GLiNER entity extraction** — `ingestion/entity_extract.py` gains an
+  encoder-NER backend (`ENTITY_BACKEND=gliner`) + regex for exact entities; no
+  per-chunk LLM tokens. **Unblocks the graph writer's #13 Groq daily-cap wall.**
+- ✅ **Evaluation harness** — `evaluation/` (`benchmark.jsonl` + `run_eval.py`):
+  zero-dep retrieval/confidence metrics plus an optional RAGAS path. Maps onto
+  the challenge's evaluation focus — a *measured* accuracy story.
+- ✅ **Observability** — `common/observability.py`: optional Langfuse tracing,
+  no-op unless `LANGFUSE_*` keys are set.
+- ✅ **RCA lookup (#29)** — `rag/rca.py` + `GET /rca/{tag}`.
+- ✅ **Compliance check (#27)** — `rag/compliance.py` + `POST /compliance/check`.
+- ✅ **Lessons-learned (#31)** — `lessons/similar_incidents.py` + `GET /lessons/similar/{doc_id}`.
+- ✅ **KG visualization (#26)** — `rag/graph_view.py` + `GET /graph/{tag}`, and a
+  dependency-free SVG Graph tab in the frontend.
+- ✅ **P&ID extractor (#11)** — `ingestion/pid_extractor.py`, vision-LLM → JSON.
+- ✅ **Front-end tabs (#28/#30/#32/#26)** — Copilot / RCA / Compliance / Lessons /
+  Graph, in a mobile-scrollable tab shell.
+- ✅ **Deploy configs (#35)** — `backend/Dockerfile`, `render.yaml`,
+  `frontend/vercel.json`, runbook in `docs/DEPLOY.md`.
+- 📄 **Demo / bug-bash / slides (#33/#34/#36)** — `docs/DEMO_SCRIPT.md`,
+  `docs/BUG_BASH.md`, `docs/SLIDES_OUTLINE.md`.
+- ⚠️ **Verification** — code + mocked unit tests written; **not yet run
+  end-to-end** in-branch (no venv / Neo4j / Groq key in the build env). Run
+  `pip install -r backend/requirements.txt`, `python -m ingestion.embed_store`,
+  `pytest`, then `python -m evaluation.run_eval` to confirm before the demo.
+
 ## Architecture & Planning Notes
 
 The five capability areas in the challenge brief (universal ingestion, expert copilot,

@@ -32,9 +32,13 @@ def test_oversized_question_returns_clean_422():
 
 
 def test_successful_query_returns_expected_shape():
-    fake_chunks = [{"score": 0.8, "doc_id": "doc1"}]
+    fake_chunks = [{"score": 0.8, "doc_id": "doc1", "chunk_id": "doc1::0", "text": "x"}]
     fake_result = {"answer": "the pump failed", "citations": []}
-    with patch("main.retrieve", return_value=fake_chunks), patch(
+    # Patch the retrieval entrypoint; expand_query/rerank pass the fake chunks
+    # through unchanged (no known equipment tag, rerank disabled in test env).
+    with patch("main.hybrid_retrieve", return_value=fake_chunks), patch(
+        "main.expand_query", side_effect=lambda q, c, top_k=5: c
+    ), patch("main.rerank", side_effect=lambda q, c, top_k=5: c), patch(
         "main.generate_answer", return_value=fake_result
     ):
         response = client.post("/query", json={"question": "why did it fail"})
@@ -46,7 +50,7 @@ def test_successful_query_returns_expected_shape():
 
 
 def test_llm_failure_returns_clean_503_not_a_crash():
-    with patch("main.retrieve", side_effect=RuntimeError("simulated Groq rate limit")):
+    with patch("main.hybrid_retrieve", side_effect=RuntimeError("simulated Groq rate limit")):
         response = client.post("/query", json={"question": "why did it fail"})
     assert response.status_code == 503
     body = response.json()

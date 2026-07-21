@@ -22,6 +22,19 @@ neo4j
 # LLM clients
 groq
 ollama
+# LLM gateway: one API for Groq/Ollama/etc. with fallback chains, per-key
+# budgets, retries and optional semantic cache (feat/production-stack). Optional
+# — llm_client falls back to the raw groq/ollama SDKs if litellm isn't installed.
+litellm
+
+# Retrieval quality (feat/production-stack) — all optional / graceful-degrade
+rank-bm25          # lexical BM25 leg of hybrid search (RRF-fused with dense)
+flashrank          # sub-100ms CPU cross-encoder reranker
+gliner             # encoder NER for entity extraction without per-chunk LLM calls
+
+# Evaluation + observability (feat/production-stack)
+ragas              # RAG metrics: context precision/recall, faithfulness, relevancy
+langfuse           # optional tracing; no-op when LANGFUSE_* env vars are unset
 
 # Testing
 pytest

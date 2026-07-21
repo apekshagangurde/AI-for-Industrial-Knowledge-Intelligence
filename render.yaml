@@ -1,0 +1,33 @@
+# Render blueprint for the backend (#35). Deploy: Render dashboard -> New ->
+# Blueprint -> point at this repo. Set secrets (GROQ_API_KEY, NEO4J_*) in the
+# dashboard, not here. Graph features need a reachable Neo4j — use Neo4j Aura
+# Free (https://neo4j.com/cloud/aura-free/) and put its bolt URI + creds below.
+services:
+  - type: web
+    name: iki-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: USE_LITELLM
+        value: "1"
+      - key: LITELLM_MODEL
+        value: groq/llama-3.3-70b-versatile
+      - key: HYBRID_SEARCH
+        value: "1"
+      - key: RERANK
+        value: "1"
+      - key: ENTITY_BACKEND
+        value: gliner
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USER
+        sync: false
+      - key: NEO4J_PASSWORD
+        sync: false
+      - key: CHROMA_PATH
+        value: ./chroma_db
