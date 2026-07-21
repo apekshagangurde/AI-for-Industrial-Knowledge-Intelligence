@@ -83,3 +83,68 @@ def query(request: QueryRequest):
     return QueryResponse(
         answer=result["answer"], citations=result["citations"], confidence=confidence
     )
+
+
+# --- Thin agentic slices over the same RAG/KG substrate --------------------
+
+class ComplianceRequest(BaseModel):
+    procedure_id: str
+    regulation_id: str
+
+
+def _unavailable(what: str):
+    raise HTTPException(
+        status_code=503,
+        detail=f"{what} is temporarily unavailable (retrieval, graph, or LLM error). Please try again shortly.",
+    )
+
+
+@app.get("/rca/{equipment_tag}")
+def rca(equipment_tag: str):
+    """#29 — Root-Cause Analysis: KG failure history + LLM reasoning, cited."""
+    from rag.rca import analyze_rca
+
+    try:
+        return analyze_rca(equipment_tag)
+    except Exception:
+        logger.exception("rca failed for equipment_tag=%r", equipment_tag)
+        _unavailable("RCA")
+
+
+@app.post("/compliance/check")
+def compliance_check(request: ComplianceRequest):
+    """#27 — Compliance gap check between a procedure and a regulation."""
+    from rag.compliance import check_compliance
+
+    try:
+        return check_compliance(request.procedure_id, request.regulation_id)
+    except Exception:
+        logger.exception(
+            "compliance check failed for procedure=%r regulation=%r",
+            request.procedure_id, request.regulation_id,
+        )
+        _unavailable("Compliance check")
+
+
+@app.get("/lessons/similar/{doc_id}")
+def lessons_similar(doc_id: str):
+    """#31 — Lessons-learned: surface past incidents similar to this one."""
+    from lessons.similar_incidents import find_similar_incidents
+
+    try:
+        return find_similar_incidents(doc_id)
+    except Exception:
+        logger.exception("lessons lookup failed for doc_id=%r", doc_id)
+        _unavailable("Lessons-learned lookup")
+
+
+@app.get("/graph/{equipment_tag}")
+def graph(equipment_tag: str):
+    """#26 — Knowledge-graph neighborhood for the visualization tab."""
+    from rag.graph_view import equipment_neighborhood
+
+    try:
+        return equipment_neighborhood(equipment_tag)
+    except Exception:
+        logger.exception("graph lookup failed for equipment_tag=%r", equipment_tag)
+        _unavailable("Graph view")
