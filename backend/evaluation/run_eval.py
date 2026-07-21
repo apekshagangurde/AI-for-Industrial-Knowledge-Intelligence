@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import time
 from pathlib import Path
 
 from rag.confidence import score_confidence
@@ -36,6 +37,9 @@ RESULTS = HERE / "results.json"
 
 RETRIEVE_CANDIDATES = int(os.getenv("RETRIEVE_CANDIDATES", "30"))
 TOP_K = 5
+# Seconds to pause between questions. Free-tier LLM providers cap tokens-per-
+# minute (Groq free = 12k TPM); a small delay keeps a 12-question run under it.
+EVAL_DELAY = float(os.getenv("EVAL_DELAY", "0"))
 
 
 def _load_benchmark() -> list[dict]:
@@ -80,7 +84,9 @@ def run(with_ragas: bool = False) -> dict:
     in_conf, out_conf = [], []
 
     print(f"\nRunning {len(cases)} benchmark questions through the pipeline...\n")
-    for case in cases:
+    for i, case in enumerate(cases):
+        if i and EVAL_DELAY:
+            time.sleep(EVAL_DELAY)
         out = _run_pipeline(case["question"])
         hit = _retrieval_hit(case, out) if case.get("in_corpus", True) else None
         (in_conf if case.get("in_corpus", True) else out_conf).append(out["confidence"])

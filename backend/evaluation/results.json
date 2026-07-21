@@ -1,0 +1,119 @@
+{
+  "summary": {
+    "n_questions": 12,
+    "retrieval_hit_rate": 1.0,
+    "citation_coverage": 1.0,
+    "mean_confidence_in_corpus": 0.955,
+    "mean_confidence_out_corpus": 0.25
+  },
+  "rows": [
+    {
+      "id": "q01",
+      "question": "Why did feed pump P-101 fail?",
+      "in_corpus": true,
+      "confidence": 0.986,
+      "n_citations": 2,
+      "retrieval_hit": true,
+      "answer": "The P-101 Feed Pump failed due to worn-out seal faces, likely caused by inadequate maintenance [1]. This was also the root cause of a similar failure that occurred later, indicating that the maintenan"
+    },
+    {
+      "id": "q02",
+      "question": "What recurring problem has P-101 had over 2024?",
+      "in_corpus": true,
+      "confidence": 0.845,
+      "n_citations": 2,
+      "retrieval_hit": true,
+      "answer": "P-101 has had recurring mechanical seal failures over 2024 [1], with the first incident occurring on June 15, 2024 [2], and another incident occurring on November 25, 2024 [1]. The root cause of both "
+    },
+    {
+      "id": "q03",
+      "question": "What issues has instrument air compressor C-501 had recently?",
+      "in_corpus": true,
+      "confidence": 0.997,
+      "n_citations": 4,
+      "retrieval_hit": true,
+      "answer": "Instrument air compressor C-501 has had an issue with excessive vibration [2], which was caused by an imbalance in the compressor's rotating assembly [2]. The vibration was detected during a routine m"
+    },
+    {
+      "id": "q04",
+      "question": "How do I test the pressure relief valve V-301?",
+      "in_corpus": true,
+      "confidence": 0.992,
+      "n_citations": 1,
+      "retrieval_hit": true,
+      "answer": "To test the pressure relief valve V-301, follow these steps [1]: \n1. Isolate the valve from the process by closing the upstream and downstream valves [1]. \n2. Apply pressure to the valve using a calib"
+    },
+    {
+      "id": "q05",
+      "question": "What is the operating procedure for the centrifugal pump?",
+      "in_corpus": true,
+      "confidence": 0.996,
+      "n_citations": 1,
+      "retrieval_hit": true,
+      "answer": "The operating procedure for the centrifugal pump is as follows [1]: \n1. Ensure the pump and surrounding area are clear of obstacles and hazards before startup.\n2. Verify the pump is properly aligned a"
+    },
+    {
+      "id": "q06",
+      "question": "Which regulation governs process safety management of highly hazardous chemicals?",
+      "in_corpus": true,
+      "confidence": 0.993,
+      "n_citations": 2,
+      "retrieval_hit": true,
+      "answer": "The Occupational Safety and Health Act of 1970 governs process safety management of highly hazardous chemicals [1], specifically through the chemical process safety standard promulgated by the Secreta"
+    },
+    {
+      "id": "q07",
+      "question": "What does 29 CFR 1910.119 require?",
+      "in_corpus": true,
+      "confidence": 0.942,
+      "n_citations": 1,
+      "retrieval_hit": true,
+      "answer": "[3] states that 29 CFR 1910.119 requires preventing or minimizing the consequences of catastrophic releases of toxic, reactive, flammable, or explosive chemicals, and it contains requirements for proc"
+    },
+    {
+      "id": "q08",
+      "question": "What are the steps in an OSHA incident investigation?",
+      "in_corpus": true,
+      "confidence": 0.994,
+      "n_citations": 1,
+      "retrieval_hit": true,
+      "answer": "According to [2], the four-step systems approach for an OSHA incident investigation is: \n1. PRESERVE/DOCUMENT THE SCENE \n2. COLLECT INFORMATION \n3. DETERMINE THE ROOT CAUSES \n4. IMPLEMENT CORRECTIVE A"
+    },
+    {
+      "id": "q09",
+      "question": "When was the last inspection of the feed pump and what was found?",
+      "in_corpus": true,
+      "confidence": 0.991,
+      "n_citations": 5,
+      "retrieval_hit": true,
+      "answer": "The context does not contain information about the last inspection of the feed pump. [1], [2], [3], [4], and [5] do not provide the most recent inspection details."
+    },
+    {
+      "id": "q10",
+      "question": "What maintenance was done on the heat exchanger HX-401?",
+      "in_corpus": true,
+      "confidence": 0.871,
+      "n_citations": 2,
+      "retrieval_hit": true,
+      "answer": "According to [1], the maintenance done on the heat exchanger HX-401 included cleaning the preheater tubes and replacing the tube bundle. Additionally, after a tube failure occurred [2], the failed tub"
+    },
+    {
+      "id": "q11",
+      "question": "What does the India Factories Act say about working hours?",
+      "in_corpus": true,
+      "confidence": 0.894,
+      "n_citations": 2,
+      "retrieval_hit": true,
+      "answer": "According to the India Factories Act [2], no adult worker shall be required or allowed to work in a factory for more than nine hours in any day [2]. Additionally, the total number of hours of work in "
+    },
+    {
+      "id": "q12",
+      "question": "What is the capital of France?",
+      "in_corpus": false,
+      "confidence": 0.25,
+      "n_citations": 5,
+      "retrieval_hit": null,
+      "answer": "The context does not contain the answer to this question."
+    }
+  ]
+}

@@ -15,6 +15,34 @@ services:
       timeout: 5s
       retries: 10
 
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: industrial-ki-backend
+    env_file: .env
+    environment:
+      # Reach Neo4j by its compose service name, not localhost.
+      - NEO4J_URI=bolt://neo4j:7687
+    ports:
+      - "8000:8000"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Where the browser reaches the backend (host), not the internal name.
+        VITE_API_BASE_URL: http://localhost:8000
+    container_name: industrial-ki-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   neo4j_data:
 

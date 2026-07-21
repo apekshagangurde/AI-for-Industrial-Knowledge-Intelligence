@@ -41,6 +41,9 @@ def test_parse_and_validate_returns_empty_on_garbage_response():
 
 def test_extract_entities_for_chunks_only_calls_llm_for_uncached_chunks(tmp_path, monkeypatch):
     monkeypatch.setattr(entity_extract, "CACHE_PATH", tmp_path / "entity_cache.json")
+    # This test targets the LLM extraction + caching path specifically; force the
+    # llm backend so the GLiNER default doesn't bypass the mocked `complete`.
+    monkeypatch.setattr(entity_extract, "ENTITY_BACKEND", "llm")
 
     call_count = {"n": 0}
 
